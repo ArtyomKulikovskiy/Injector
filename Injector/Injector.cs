@@ -5,6 +5,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using Vanara.PInvoke;
+using static Vanara.PInvoke.Kernel32;
 
 namespace Injector
 {
@@ -65,6 +67,7 @@ namespace Injector
         public void Inject()
         {
             Process process = null;
+
             if (opts.ProcessId != null)
             {
                 // find process by pid
@@ -113,7 +116,13 @@ namespace Injector
                     }
 
                     logger.Info($"Starting {opts.StartProcess}");
-                    process = Process.Start(app, app_args);
+                    //process = Process.Start(app, app_args);
+
+                    var startupInfo = new STARTUPINFO();
+                    var creationFlags = Kernel32.CREATE_PROCESS.DEBUG_ONLY_THIS_PROCESS;
+
+                    CreateProcess(app, null, null, null, false, creationFlags, null, null, startupInfo, out var pi);
+                    DebugActiveProcessStop(pi.dwProcessId);
 
                     if (opts.ProcessName != null)
                     {
